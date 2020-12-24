@@ -20,7 +20,7 @@ from bokeh.transform import factor_cmap
 
 from flask import Flask, render_template, request
 
-df = pd.read_csv('../data/titanic.csv')
+df = pd.read_csv('data/titanic.csv')
 df['Title'] = df['Name'].apply(lambda x: x.split(',')[1].strip().split(' ')[0])
 
 ################################################################################
