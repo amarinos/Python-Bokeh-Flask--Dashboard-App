@@ -16,9 +16,26 @@
         <div class="row mt-5">
             {{ div_hist_age|safe }}
         </div>
+        <div class="row mt-5">
+            <div class="col-6">
+                <div class="centered">
+                    {{ div_pie_chart|safe }}
+                </div>
+              </div>
+              
+              <div class="col-6">
+                <div class="centered">
+                    {{ div_pie_countries|safe }}
+                </div>
+              </div>
+           
+           
+        </div>
     </div>
 
     {{ script_survived_chart|safe }}
     {{ script_title_chart|safe }}
     {{ script_hist_age|safe }}
+    {{ script_pie_chart|safe }}
+    {{ script_pie_countries|safe }}
 {% endblock %}

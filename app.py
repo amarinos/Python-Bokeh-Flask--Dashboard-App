@@ -7,6 +7,7 @@
 
 ################################################################################
 #                                  > IMPORTS                                   #
+###TEST ANTONIOS 
 ################################################################################
 import math
 import numpy as np
@@ -19,6 +20,16 @@ from bokeh.plotting import figure
 from bokeh.transform import factor_cmap
 
 from flask import Flask, render_template, request
+
+from math import pi
+
+import pandas as pd
+
+from bokeh.io import output_file, show
+from bokeh.palettes import Category20c
+from bokeh.plotting import figure
+from bokeh.transform import cumsum
+
 
 df = pd.read_csv('data/titanic.csv')
 df['Title'] = df['Name'].apply(lambda x: x.split(',')[1].strip().split(' ')[0])
@@ -81,10 +92,14 @@ def redraw(p_class):
     survived_chart = survived_bar_chart(df, p_class)
     title_chart = class_titles_bar_chart(df, p_class)
     hist_age = age_hist(df, p_class)
+    pie_chart = chart_pie(df,p_class)
+    pie_countries = chart_countries(df,p_class)
     return (
         survived_chart,
         title_chart,
-        hist_age
+        hist_age,
+        pie_chart,
+        pie_countries
     )
 
 ################################################################################
@@ -102,13 +117,15 @@ def chart():
     selected_class = request.form.get('dropdown-select')
 
     if selected_class == 0 or selected_class == None:
-        survived_chart, title_chart, hist_age = redraw(1)
+        survived_chart, title_chart, hist_age, pie_chart,pie_countries = redraw(1)
     else:
-        survived_chart, title_chart, hist_age = redraw(selected_class)
+        survived_chart, title_chart, hist_age, pie_chart,pie_countries = redraw(selected_class)
 
     script_survived_chart, div_survived_chart = components(survived_chart)
     script_title_chart, div_title_chart = components(title_chart)
     script_hist_age, div_hist_age = components(hist_age)
+    script_pie_chart, div_pie_chart = components(pie_chart)
+    script_pie_countries, div_pie_countries = components(pie_countries)
 
     return render_template(
         'index.html',
@@ -118,7 +135,11 @@ def chart():
         script_title_chart=script_title_chart,
         div_hist_age=div_hist_age,
         script_hist_age=script_hist_age,
-        selected_class=selected_class
+        selected_class=selected_class,
+        script_pie_chart = script_pie_chart,
+        div_pie_chart = div_pie_chart,
+        div_pie_countries = div_pie_countries,
+        script_pie_countries = script_pie_countries
     )
 
 ################################################################################
@@ -214,6 +235,74 @@ def age_hist(dataset, pass_class, color=palette[1]):
 
     return p
 
+def chart_pie(dataset, pass_class,  color=palette[1]):
+    #output_file("pie.html")
+
+    x = {
+        'Information Technology': 157,
+        'Retail': 93,
+        'Industrials': 89,
+        'Energy': 63,
+        'Health Care': 44,
+        'Financials': 42
+    }
+
+    data = pd.Series(x).reset_index(name='value').rename(columns={'index':'country'})
+    data['angle'] = data['value']/data['value'].sum() * 2*pi
+    data['color'] = Category20c[len(x)]
+
+    p = figure(plot_height=350, title="Sector Distribution", toolbar_location=None,
+            tools="hover", tooltips="@country: @value", x_range=(-0.5, 1.0))
+
+    p.wedge(x=0, y=1, radius=0.4,
+            start_angle=cumsum('angle', include_zero=True), end_angle=cumsum('angle'),
+            line_color="white", fill_color='color', legend='country', source=data) 
+
+    p.axis.axis_label=None
+    p.axis.visible=False
+    p.grid.grid_line_color = None
+
+    #show(p)
+
+    #plot_styler(p)
+    #p.sizing_mode = 'scale_width'
+
+    return p
+
+def chart_countries(dataset, pass_class,  color=palette[1]):
+    #output_file("pie.html")
+
+    x = {
+        'USA': 190,
+        'China': 93,
+        'Germany': 89,
+        'Japan': 63,
+        'UK': 44,
+        'Rest': 42
+    }
+
+    data = pd.Series(x).reset_index(name='value').rename(columns={'index':'country'})
+    data['angle'] = data['value']/data['value'].sum() * 2*pi
+    data['color'] = Category20c[len(x)]
+
+    p = figure(plot_height=350, title="Country Distribution", toolbar_location=None,
+            tools="hover", tooltips="@country: @value", x_range=(-0.5, 1.0))
+
+    p.wedge(x=0, y=1, radius=0.4,
+            start_angle=cumsum('angle', include_zero=True), end_angle=cumsum('angle'),
+            line_color="white", fill_color='color', legend='country', source=data) 
+
+    p.axis.axis_label=None
+    p.axis.visible=False
+    p.grid.grid_line_color = None
+
+    #show(p)
+
+    #plot_styler(p)
+    #p.sizing_mode = 'scale_width'
+
+    return p
+    
 ################################################################################
 #                    - END OF CHART GENERATION FUNCTIONS -                     #
 ################################################################################
